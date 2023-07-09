@@ -304,6 +304,12 @@ class KubernetesBuildExecutor(BuildExecutor):
         config=True,
     )
 
+    dns_config = Dict(
+        {},
+        help="DNS config",
+        config=True
+    )
+
     _component_label = Unicode("binderhub-build")
 
     def get_affinity(self):
@@ -426,6 +432,16 @@ class KubernetesBuildExecutor(BuildExecutor):
                 },
             ),
             spec=client.V1PodSpec(
+                dns_config = client.V1PodDNSConfig(
+                    nameservers=self.dns_config.get("nameservers", []),
+                    options=[
+                        client.V1PodDNSConfigOption(
+                            name=x["name"],
+                            value=x["value"]
+                        ) for x in self.dns_config.get("options", [])
+                    ],
+                    searches=self.dns_config.get("searches", []),
+                ),
                 containers=[
                     client.V1Container(
                         image=self.build_image,
